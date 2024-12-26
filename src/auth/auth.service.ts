@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { UserDTO } from '../users/userDto/userDTO';
+import { User } from '../users/user/user';
+import { AuthDto } from './authDTO/authDto';
 
 @Injectable()
 export class AuthService {
@@ -10,22 +13,28 @@ export class AuthService {
         private jwtService: JwtService,
     ){}
 
-    async validateUser(email: string, password: string): Promise<any> {
-        console.log("appel a la fonction validate User !!");
-        const user = await this.usersService.findByEmail(email);
-        if(!user) console.log("user n est pas trouve par l adresse mail");
-        console.log("find by email user : ",user.email);
-        if (user && (await bcrypt.compare(password, user.password))) {
-            console.log("password passe : ",password);
-            console.log("password user : ",user.password);
-            console.log("comparaison entre les pwd : ", bcrypt.compare(password, user.password));
-            ///const { password, ...result } = user;
+    async validateUser(authDto : AuthDto) : Promise<any>{
+        const user = await this.usersService.findByEmail(authDto.email);
+        if(user && (await bcrypt.compare(authDto.password,user.password))){
             return user;
         }
         return null;
     }
+  async register(userDto : UserDTO){
+    const user = await this.usersService.findByEmail(userDto.email);
+    if(user) throw new Error('User already exists');
+    return this.usersService.createUser(userDto);
+  }
+  /*async register(userData:any){
+      const user = await this.usersService.findByEmail(userData.email);
+      if(user){
+          throw new Error('User already exists');
+      }
+      return this.usersService.createUser(userData);
+  }*/
 
-    async login(user: any) {
+
+    async login(user: User) {
         const payload = { email: user.email, sub: user.id };
         return {
             access_token: this.jwtService.sign(payload,{expiresIn:'15m'}),
@@ -81,13 +90,7 @@ export class AuthService {
     }
     
 
-    async register(userData:any){
-        const user = await this.usersService.findByEmail(userData.email);
-        if(user){
-            throw new Error('User already exists');
-        }
-        return this.usersService.createUser(userData);
-    }
+
 
     async logout(refreshToken: string) {
         const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET_KEY});
