@@ -6,6 +6,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LocationsModule } from './locations/locations.module';
+import { TeamModule } from './teams/team.module';
+import { User } from './users/user/user';
+import { Location } from './locations/location/location';
+import { Team } from './teams/team/team.entity';
 
 @Module({
   imports: [
@@ -26,9 +30,10 @@ import { LocationsModule } from './locations/locations.module';
         trustServerCertificate: true
       }
     }),
-    AuthModule,
     UsersModule,
-    LocationsModule
+    AuthModule,
+    LocationsModule,
+    TeamModule
   ],
   controllers: [AppController],
   providers: [AppService],
