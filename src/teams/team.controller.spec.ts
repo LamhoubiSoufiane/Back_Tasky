@@ -5,6 +5,7 @@ import { TeamService } from './team.service';
 describe('TeamController', () => {
   let controller: TeamController;
   let service: TeamService;
+  const mockReq = { user: { userId: 1 } };
 
   const mockTeamService = {
     create: jest.fn(),
@@ -47,10 +48,10 @@ describe('TeamController', () => {
 
       mockTeamService.create.mockResolvedValue(expectedTeam);
 
-      const result = await controller.create(teamDto);
+      const result = await controller.create(mockReq, teamDto);
 
       expect(result).toBe(expectedTeam);
-      expect(service.create).toHaveBeenCalledWith(teamDto);
+      expect(service.create).toHaveBeenCalledWith(teamDto, mockReq.user.userId);
     });
   });
 
@@ -97,18 +98,22 @@ describe('TeamController', () => {
 
       mockTeamService.update.mockResolvedValue(expectedTeam);
 
-      const result = await controller.update('1', teamDto);
+      const result = await controller.update(mockReq, '1', teamDto);
 
       expect(result).toBe(expectedTeam);
-      expect(service.update).toHaveBeenCalledWith(1, teamDto);
+      expect(service.update).toHaveBeenCalledWith(
+        1,
+        teamDto,
+        mockReq.user.userId,
+      );
     });
   });
 
   describe('remove', () => {
     it('should remove a team', async () => {
-      await controller.remove('1');
+      await controller.remove(mockReq, '1');
 
-      expect(service.remove).toHaveBeenCalledWith(1);
+      expect(service.remove).toHaveBeenCalledWith(1, mockReq.user.userId);
     });
   });
 });

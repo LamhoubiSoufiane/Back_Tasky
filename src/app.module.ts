@@ -27,13 +27,13 @@ import { Team } from './teams/team/team.entity';
       synchronize: true,
       logging: true,
       extra: {
-        trustServerCertificate: true
-      }
+        trustServerCertificate: true,
+      },
     }),
     UsersModule,
     AuthModule,
     LocationsModule,
-    TeamModule
+    TeamModule,
   ],
   controllers: [AppController],
   providers: [AppService],
