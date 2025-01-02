@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres:latest
@@ -7,19 +8,32 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 5179
       POSTGRES_DB: tasky
-      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
-    networks:
-      - tasky-network
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql/data
 
-networks:
-  tasky-network:
-    driver: bridge
+  postgres_test:
+    image: postgres:latest
+    container_name: tasky-test-container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 5179
+      POSTGRES_DB: tasky_test
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
 
 volumes:
-  postgres-data:
+  postgres_data:
+  postgres_test_data:
+  redis-data:
