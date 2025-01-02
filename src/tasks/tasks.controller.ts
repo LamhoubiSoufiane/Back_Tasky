@@ -1,7 +1,6 @@
 import { Controller, Post } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Body } from '@nestjs/ common';
-import { Task } from './bo/task';
+import { Body } from '@nestjs/common';
 import { TaskDto } from './dto/taskDto';
 
 @Controller('tasks')
