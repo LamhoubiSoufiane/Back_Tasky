@@ -54,7 +54,7 @@ export class OtpService {
       attachments: [
         {
           filename: 'Tasky.jpeg',
-          path: path.join(__dirname, '..', 'static', 'images', 'Tasky.jpeg'),
+          path: path.join(process.cwd(), 'src', 'static', 'images', 'Tasky.jpeg'),
           cid: 'Tasky',
         },
       ],

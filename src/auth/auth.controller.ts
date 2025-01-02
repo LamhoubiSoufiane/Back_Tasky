@@ -42,28 +42,13 @@ export class AuthController {
     Cette endpoint est pour reinitialiser le mdp
     d'un utilisateur qui n'est pas encore authentifié
     * */
-    @Post('reset-password-request')
+    @Post('reset-password-otp')
     async requestPasswordReset(@Body('email') email: string): Promise<string> {
         const otp = await this.otpService.generateAndStoreOtp(email);
         await this.otpService.sendOtpEmail(email,  otp);
-        return "Un code de vérification est envoyé à l'adresse mail ";
+        return "Un code de vérification est envoyé à l'adresse mail";
         //return this.authService.sendPasswordResetOTP(email);
     }
-
-    /*
-    Cette endpoint est pour reinitialiser le mdp
-    d'un utilisateur qui est deja authentifié et il veut
-    changer son mot de passe
-    * */
-    /*@Post('change-password')
-    async changePassword(
-      @Body('userId') userId: string,
-      @Body('currentPassword') currentPassword: string,
-      @Body('newPassword') newPassword: string,
-    ) {
-        return this.authService.changePassword(userId, currentPassword, newPassword);
-    }
-    */
     @Post('verify-otp')
     async verifyOTP(
       @Body('email') email: string,
@@ -72,6 +57,23 @@ export class AuthController {
     ) {
         return this.otpService.validateOtp(email, otp);
     }
+
+    /*
+    Cette endpoint est pour reinitialiser le mdp
+    d'un utilisateur qui est deja authentifié et il veut
+    changer son mot de passe
+    * */
+    @Post('reset-password')
+    async resetPassword(
+      @Body('userId') userId: number,
+      @Body('email') email: string,
+      @Body('currentPassword') currentPassword: string,
+      @Body('newPassword') newPassword: string,
+    ) {
+        return this.authService.changePassword(userId,email, currentPassword, newPassword);
+    }
+
+
 
     @UseGuards(RefreshTokenGuard)
     @Post('refresh-token')
