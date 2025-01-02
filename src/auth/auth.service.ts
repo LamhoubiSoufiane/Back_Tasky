@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -9,7 +9,6 @@ import { InvalidCredentials } from '../exception/InvalidCredentials';
 
 @Injectable()
 export class AuthService {
-  private otps = new Map<string, string>();
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -24,7 +23,7 @@ export class AuthService {
   }
   async register(userDto: UserDTO) {
     const user = await this.usersService.findByEmail(userDto.email);
-    if (user) throw new InvalidCredentials('User already exists');
+    if (user) throw new InvalidCredentials('User already exists',203);
     return this.usersService.createUser(userDto);
   }
   /*async register(userData:any){
@@ -70,7 +69,7 @@ export class AuthService {
       });
       return payload;
     } catch (error) {
-      throw new InvalidCredentials('Invalid refresh token');
+      throw new InvalidCredentials('Invalid refresh token',203);
     }
   }
 
@@ -81,7 +80,7 @@ export class AuthService {
       });
       const user = await this.usersService.findByEmail(payload.email);
       if (!user) {
-        throw new InvalidCredentials('Invalid refresh token');
+        throw new InvalidCredentials('Invalid refresh token',203);
       }
       const newPayload = { email: user.email, sub: user.id };
       const newAccessToken = this.jwtService.sign(newPayload, {
@@ -97,17 +96,10 @@ export class AuthService {
         refresh_token: newRefreshToken,
       };
     } catch (e) {
-      throw new InvalidCredentials('Invalid refresh token');
+      throw new InvalidCredentials('Invalid refresh token',203);
     }
   }
 
-  /*async sendPasswordResetOTP(email: string): Promise<string>{
-    const otp = Math.random().toString().slice(-6);
-    this.otps.set(email, otp);
-    // Ici, vous devez envoyer l'OTP à l'e-mail de l'utilisateur (via un service SMTP ou une API externe)
-    console.log(`OTP for ${email}: ${otp}`);
-    return 'OTP sent to your email.';
-  }*/
 
   async logout(refreshToken: string) {
     const payload = this.jwtService.verify(refreshToken, {
@@ -115,9 +107,29 @@ export class AuthService {
     });
     const user = await this.usersService.findByEmail(payload.email);
     if (!user) {
-      throw new InvalidCredentials('Invalid refresh token');
+      throw new InvalidCredentials('Invalid refresh token',203);
     }
     await this.usersService.saveRefreshToken(user.id, null);
     return { message: 'Logged out successfully' };
+  }
+
+  async changePassword(id: number | null, email: string | null,oldPassword: string | null, newPassword: string): Promise<string>{
+    if (!id && !email) {
+      throw new BadRequestException('Utilisateur introuvable.');
+    }
+    const user = id
+      ? await this.usersService.findById(id)
+      : await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException('Utilisateur introuvable.');
+    }
+    if(oldPassword){
+      const isPasswordValid = await bcrypt.compare(oldPassword,user.password);
+      if(!isPasswordValid) throw new UnauthorizedException('Ancien mot de passe incorrect');
+
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.updatePassword(user.email, hashedPassword);
+    return 'Mot de passe modifié avec succès.';
   }
 }
