@@ -6,6 +6,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LocationsModule } from './locations/locations.module';
+/*
+import { ProjetModule } from './projet/projet.module';
+import { ProjetsModule } from './projets/projets.module';
+import { ProjetController } from './projet/projet.controller';
+import { ProjetsModule } from './projets/projets.module';
+import { ProjetController } from './projet/projet.controller';
+*/
+import { ProjetsModule } from './projets/projets.module';
+import { ProjetsController } from './projets/projets.controller';
+import { ProjetsService } from './projets/projets.service';
 
 @Module({
   imports: [
@@ -15,7 +25,7 @@ import { LocationsModule } from './locations/locations.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT) || 5432,
+      port: parseInt(process.env.DB_PORT) || 5433,
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
@@ -28,7 +38,9 @@ import { LocationsModule } from './locations/locations.module';
     }),
     AuthModule,
     UsersModule,
-    LocationsModule
+    ProjetsModule,
+    LocationsModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
