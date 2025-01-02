@@ -10,7 +10,9 @@ import { TeamModule } from './teams/team.module';
 import { User } from './users/user/user';
 import { Location } from './locations/location/location';
 import { Team } from './teams/team/team.entity';
-
+import { ProjetsModule } from './projets/projets.module';
+import { ProjetsController } from './projets/projets.controller';
+import { ProjetsService } from './projets/projets.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -32,6 +34,7 @@ import { Team } from './teams/team/team.entity';
     }),
     UsersModule,
     AuthModule,
+    ProjetsModule,
     LocationsModule,
     TeamModule,
   ],
