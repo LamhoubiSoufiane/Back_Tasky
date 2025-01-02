@@ -10,6 +10,7 @@ import { TeamModule } from './teams/team.module';
 import { User } from './users/user/user';
 import { Location } from './locations/location/location';
 import { Team } from './teams/team/team.entity';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Team } from './teams/team/team.entity';
     AuthModule,
     LocationsModule,
     TeamModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
