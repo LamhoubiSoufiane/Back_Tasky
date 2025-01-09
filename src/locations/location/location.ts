@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Tache } from "src/taches/tache/tache";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from "typeorm";
 
 @Entity()
 export class Location {
@@ -8,5 +9,7 @@ export class Location {
   latitude:number;
   @Column('float')
   longitude:number;
-
+  @ManyToOne(() => Tache, (tache) => tache.locations, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'tache_id' })
+  tache: Tache;
 }
