@@ -13,6 +13,7 @@ export class LocationMapper {
 
   toDTO(bo: Location): LocationDto {
     const dto = new LocationDto();
+    dto.id = bo.id;
     dto.latitude = bo.latitude;
     dto.longitude = bo.longitude;
     return dto;
