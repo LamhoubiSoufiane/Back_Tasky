@@ -1,46 +1,50 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ProjetsService } from './projets.service';
-import { ProjetDTO } from './projetDto/projetDTO';
 import { Projet } from './projet/projet';
+import { ProjetDTO } from './projetDto/projetDTO';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('projets')
+@UseGuards(JwtAuthGuard)
 export class ProjetsController {
-    constructor(private readonly projetsService: ProjetsService) {}
-    
-    @Post('create')
-    async create(@Body() projetDto: ProjetDTO): Promise<Projet> {
-        return this.projetsService.create(projetDto);
-    }
+  constructor(private readonly projetsService: ProjetsService) {}
 
-    @Get()
-    async findAll(): Promise<Projet[]>{
-        return this.projetsService.findAll();
-    }
+  @Post()
+  async create(@Request() req, @Body() projetDto: ProjetDTO): Promise<Projet> {
+    return this.projetsService.create(projetDto, req.user.userId);
+  }
 
-    @Post('find')
-    async findOne(@Body('id') id: number): Promise<Projet> {
-      return this.projetsService.findById(id);
-    }
+  @Get()
+  async findAll(@Request() req): Promise<Projet[] | { message: string }> {
+    return this.projetsService.findAll(req.user.userId);
+  }
 
-    @Post('update')
-    async update(
-      @Body('id') id: number,
-      @Body() projetDto: ProjetDTO,
-    ): Promise<Projet> {
-      return this.projetsService.update(id, projetDto);
-    }
-/*
-    @Patch('update')
-    async update(
-    @Body('id') id: number,
+  @Get(':id')
+  async findOne(@Request() req, @Param('id') id: string): Promise<Projet> {
+    return this.projetsService.findById(+id, req.user.userId);
+  }
+
+  @Put(':id')
+  async update(
+    @Request() req,
+    @Param('id') id: string,
     @Body() projetDto: ProjetDTO,
-    ): Promise<Projet> {
-    return this.projetsService.update(id, projetDto);
-    }
-*/
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<void> {
-        return this.projetsService.remove(id);
-    }
+  ): Promise<Projet> {
+    return this.projetsService.update(+id, projetDto, req.user.userId);
+  }
 
+  @Delete(':id')
+  async remove(@Request() req, @Param('id') id: string): Promise<void> {
+    return this.projetsService.remove(+id, req.user.userId);
+  }
 }

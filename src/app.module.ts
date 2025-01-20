@@ -13,7 +13,7 @@ import { Team } from './teams/team/team.entity';
 import { ProjetsModule } from './projets/projets.module';
 import { ProjetsController } from './projets/projets.controller';
 import { ProjetsService } from './projets/projets.service';
-import { TachesModule } from './taches/taches.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,7 +38,6 @@ import { TachesModule } from './taches/taches.module';
     ProjetsModule,
     LocationsModule,
     TeamModule,
-    TachesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

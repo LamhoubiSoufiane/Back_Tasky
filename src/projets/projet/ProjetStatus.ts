@@ -1,8 +1,7 @@
 export enum ProjetStatus {
-    Planifie = 'planifié',
-    EnCours = 'en cours',
-    Suspendu = 'suspendu',
-    Termine = 'terminé',
-    Annule = 'annulé',
-  }
+    EN_COURS = 'EN_COURS',
+    TERMINE = 'TERMINE',
+    ANNULE = 'ANNULE',
+    PLANIFIE = 'PLANIFIE'
+}
   

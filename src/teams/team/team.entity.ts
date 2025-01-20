@@ -5,8 +5,10 @@ import {
   ManyToMany,
   JoinTable,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 import { User } from '../../users/user/user';
+import { Projet } from '../../projets/projet/projet';
 
 @Entity()
 export class Team {
@@ -32,4 +34,7 @@ export class Team {
     },
   })
   members: User[];
+
+  @OneToMany(() => Projet, (projet) => projet.team)
+  projets: Projet[];
 }

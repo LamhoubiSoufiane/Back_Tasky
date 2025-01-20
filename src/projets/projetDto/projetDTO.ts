@@ -1,8 +1,9 @@
+import { ProjetStatus } from '../projet/ProjetStatus';
 
 export class ProjetDTO {
     readonly nom: string;
-    readonly startDate: string;
-    readonly endDate: string;
-    readonly status: string;
+    readonly description?: string;
+    readonly teamId?: number;
+    readonly status?: ProjetStatus;
 }
 

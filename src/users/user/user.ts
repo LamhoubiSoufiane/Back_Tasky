@@ -1,6 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToMany, OneToMany  } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToMany, OneToMany, ManyToOne  } from 'typeorm';
 import { Team } from '../../teams/team/team.entity';
-import { Tache } from 'src/taches/tache/tache';
 
 @Entity()
 export class User {
@@ -37,6 +36,10 @@ export class User {
   @ManyToMany(() => Team, (team) => team.members)
   teams: Team[];
 
-  @OneToMany(() => Tache, (tache) => tache.member, { cascade: true })
-  taches: Tache[];
+
+  @ManyToOne(() => User, (user) => user.subordinates, { nullable: true })
+  chef: User | null;
+
+  @OneToMany(() => User, (user) => user.chef)
+  subordinates: User[];
 }
