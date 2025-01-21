@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Team } from '../../teams/team/team.entity';
+import { ProjetStatus } from './ProjetStatus';
 
 
 @Entity()
@@ -8,14 +10,18 @@ export class Projet {
 
     @Column()
     nom: string;
+    @Column({type: 'text', nullable: true})
+    description: string;
     
-    @Column({ type: 'date'})
-    startDate: string;
+    @Column()
+    startDate: Date;
     
-    @Column({ type: 'date'})
-    endDate: string;
+    @Column()
+    endDate: Date;
     
-    @Column({ type: 'enum', enum: ['planifié', 'en cours', 'terminé', 'annulé'], default: 'planifié' })
-    status: string;
+    @Column()
+    status: ProjetStatus;
 
+    @ManyToOne(() => Team, team => team.members)
+    team: Team;
 }

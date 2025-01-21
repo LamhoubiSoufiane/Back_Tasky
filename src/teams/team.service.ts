@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { Team } from './team/team.entity';
 import { TeamDTO } from './dto/team.dto';
 import { User } from '../users/user/user';
+//import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class TeamService {
@@ -17,6 +18,7 @@ export class TeamService {
     private teamRepository: Repository<Team>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    //private readonly notificationService: NotificationService,
   ) {}
 
   async create(teamDto: TeamDTO, currentUserId: number): Promise<Team> {
@@ -71,7 +73,15 @@ export class TeamService {
     }
 
     team.members = [...team.members, newMember];
-    return this.teamRepository.save(team);
+    const savedUser = this.teamRepository.save(team);
+    /*if (newMember.fcmToken) {
+      await this.notificationService.sendTeamInvitationNotification(
+        newMember.fcmToken,
+        team.nom,
+        team.id.toString(),
+      );
+    }*/
+    return savedUser;
   }
 
   async findAll(): Promise<Team[]> {

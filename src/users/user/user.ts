@@ -33,6 +33,8 @@ export class User {
 
   @Column({ nullable: true })
   refreshToken: string | null;
+  /*@Column()
+  fcmToken: string | null;*/
 
   @ManyToMany(() => Team, (team) => team.members)
   teams: Team[];

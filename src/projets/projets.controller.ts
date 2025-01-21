@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ProjetsService } from './projets.service';
 import { ProjetDTO } from './projetDto/projetDTO';
 import { Projet } from './projet/projet';
@@ -6,41 +6,42 @@ import { Projet } from './projet/projet';
 @Controller('projets')
 export class ProjetsController {
     constructor(private readonly projetsService: ProjetsService) {}
-    
-    @Post('create')
-    async create(@Body() projetDto: ProjetDTO): Promise<Projet> {
+
+    /*@Get()
+    async findAll(): Promise<ProjetDTO[]>{
+        return this.projetsService.findAll();
+    }*/
+    @Post()
+    async create(@Body() projetDto: ProjetDTO): Promise<ProjetDTO> {
         return this.projetsService.create(projetDto);
     }
 
-    @Get()
-    async findAll(): Promise<Projet[]>{
-        return this.projetsService.findAll();
+    /*@Put()
+    async update(@Body() projetDto: ProjetDTO): Promise<ProjetDTO> {
+        return this.projetsService.update(projetDto);
     }
 
-    @Post('find')
-    async findOne(@Body('id') id: number): Promise<Projet> {
+    @Delete(':id')
+    async remove(@Param('id') id: number): Promise<string> {
+        return this.projetsService.remove(id);
+    }*/
+
+    @Get(':id')
+    async findOne(@Param('id') id: number): Promise<ProjetDTO> {
       return this.projetsService.findById(id);
     }
 
-    @Post('update')
-    async update(
-      @Body('id') id: number,
-      @Body() projetDto: ProjetDTO,
-    ): Promise<Projet> {
-      return this.projetsService.update(id, projetDto);
+    @Get('team/:teamId')
+    async findByTeamId(@Param('teamId') teamId: number): Promise<ProjetDTO[]>{
+        return this.projetsService.getProjetsByTeamId(teamId);
     }
-/*
-    @Patch('update')
-    async update(
-    @Body('id') id: number,
-    @Body() projetDto: ProjetDTO,
-    ): Promise<Projet> {
-    return this.projetsService.update(id, projetDto);
-    }
-*/
-    @Delete(':id')
-    async remove(@Param('id') id: number): Promise<void> {
-        return this.projetsService.remove(id);
-    }
+
+    /*@Get('createur/:createurId')
+    findByCreateur(@Param('createurId') createurId: number): Promise<ProjetDTO>{
+        return this.projetsService.findByCreateur(createurId);
+    }*/
+
+
+
 
 }
