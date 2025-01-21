@@ -1,8 +1,13 @@
+import { Column, ManyToOne } from 'typeorm';
+import { Team } from '../../teams/team/team.entity';
 
 export class ProjetDTO {
-    readonly nom: string;
-    readonly startDate: string;
-    readonly endDate: string;
-    readonly status: string;
+    id: number;
+    nom: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    idTeam: number;
 }
 
