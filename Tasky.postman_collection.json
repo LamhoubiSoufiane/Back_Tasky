@@ -100,7 +100,7 @@
 					}
 				},
 				{
-					"name": "Get My Teams",
+					"name": "Get Team Members",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -111,11 +111,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/teams",
+							"raw": "{{baseUrl}}/teams/:teamId/members",
 							"host": ["{{baseUrl}}"],
-							"path": ["teams"]
+							"path": ["teams", ":teamId", "members"],
+							"variable": [
+								{
+									"key": "teamId",
+									"value": "1"
+								}
+							]
 						},
-						"description": "Get all teams where the current user is a member or owner"
+						"description": "Get all members of a team"
 					}
 				},
 				{
@@ -146,6 +152,35 @@
 						},
 						"description": "Add a user to a team (only team owner can do this)"
 					}
+				},
+				{
+					"name": "Remove Member from Team",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/teams/:teamId/members/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["teams", ":teamId", "members", ":userId"],
+							"variable": [
+								{
+									"key": "teamId",
+									"value": "1"
+								},
+								{
+									"key": "userId",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Remove a member from a team (only team owner can do this)"
+					}
 				}
 			]
 		},
@@ -165,7 +200,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"nom\": \"New Project\",\n    \"description\": \"Project description\",\n    \"startDate\": \"2024-01-21\",\n    \"endDate\": \"2024-02-21\",\n    \"status\": \"Planifie\",\n    \"idTeam\": 1\n}",
+							"raw": "{\n    \"nom\": \"New Project\",\n    \"description\": \"Project description\",\n    \"startDate\": \"2024-01-21\",\n    \"endDate\": \"2024-02-21\",\n    \"status\": \"planifié\",\n    \"idTeam\": 1\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -181,26 +216,7 @@
 					}
 				},
 				{
-					"name": "Get My Projects",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{accessToken}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/projets/member",
-							"host": ["{{baseUrl}}"],
-							"path": ["projets", "member"]
-						},
-						"description": "Get all projects from teams where the current user is a member or owner"
-					}
-				},
-				{
-					"name": "Get Team Projects",
+					"name": "Get Projects by Team",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -225,7 +241,7 @@
 					}
 				},
 				{
-					"name": "Get Project by ID",
+					"name": "Get Projects by Member",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -236,17 +252,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/projets/:id",
+							"raw": "{{baseUrl}}/projets/member/:memberId",
 							"host": ["{{baseUrl}}"],
-							"path": ["projets", ":id"],
+							"path": ["projets", "member", ":memberId"],
 							"variable": [
 								{
-									"key": "id",
+									"key": "memberId",
 									"value": "1"
 								}
 							]
 						},
-						"description": "Get a specific project by ID"
+						"description": "Get all projects for a specific member"
 					}
 				}
 			]
@@ -267,7 +283,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"nom\": \"New Task\",\n    \"description\": \"Task description\",\n    \"startDate\": \"2024-01-21\",\n    \"endDate\": \"2024-01-28\",\n    \"status\": \"AFAIRE\",\n    \"projetId\": 1,\n    \"location\": {\n        \"latitude\": 33.5731104,\n        \"longitude\": -7.5898434\n    }\n}",
+							"raw": "{\n    \"nom\": \"New Task\",\n    \"description\": \"Task description\",\n    \"startDate\": \"2024-01-21\",\n    \"endDate\": \"2024-02-21\",\n    \"priority\": \"normale\",\n    \"statut\": \"a faire\",\n    \"projetId\": 1,\n    \"location\": {\n        \"latitude\": 33.5731104,\n        \"longitude\": -7.5898434,\n        \"address\": \"Casablanca, Morocco\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -279,11 +295,40 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["tasks"]
 						},
-						"description": "Create a new task in a project (team owner or member can do this)"
+						"description": "Create a new task in a project"
 					}
 				},
 				{
-					"name": "Get Project Tasks",
+					"name": "Assign Task to Member",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tasks/:taskId/assign/:memberId",
+							"host": ["{{baseUrl}}"],
+							"path": ["tasks", ":taskId", "assign", ":memberId"],
+							"variable": [
+								{
+									"key": "taskId",
+									"value": "1"
+								},
+								{
+									"key": "memberId",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Assign a task to a team member"
+					}
+				},
+				{
+					"name": "Get Tasks by Project",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -305,6 +350,61 @@
 							]
 						},
 						"description": "Get all tasks for a specific project"
+					}
+				},
+				{
+					"name": "Get Task by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tasks/:taskId",
+							"host": ["{{baseUrl}}"],
+							"path": ["tasks", ":taskId"],
+							"variable": [
+								{
+									"key": "taskId",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get a specific task by its ID"
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/search?query=john",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "john"
+								}
+							]
+						},
+						"description": "Search for users by name or email"
 					}
 				}
 			]

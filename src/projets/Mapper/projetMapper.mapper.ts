@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProjetDTO } from '../projetDto/projetDTO';
 import { Projet } from '../projet/projet';
 import { ProjetStatus } from '../projet/ProjetStatus';
+import { Team } from '../../teams/team/team.entity'; // Updated Team import statement
 
 @Injectable()
 export class ProjetMapper {
@@ -13,6 +14,7 @@ export class ProjetMapper {
     bo.startDate = new Date(dto.startDate);
     bo.endDate = new Date(dto.endDate);
     bo.status = ProjetStatus[dto.status];
+    bo.team = { id: dto.idTeam } as Team;  // Updated to use idTeam instead of teamId
     return bo;
   }
 

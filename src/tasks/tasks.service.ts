@@ -22,7 +22,7 @@ export class TasksService {
     ) {}
 
     async createTask(taskDto: TaskDto, currentUserId: number): Promise<TaskDto> {
-        // Find the project with its team, owner and members
+        // Find the project with its team, owner and members with proper relations
         const projet = await this.projetRepository.findOne({
             where: { id: taskDto.projetId },
             relations: ['team', 'team.owner', 'team.members']
@@ -32,12 +32,16 @@ export class TasksService {
             throw new NotFoundException(`Project with ID ${taskDto.projetId} not found`);
         }
 
-        // Check if the current user is either the team owner or a team member
-        const isTeamOwner = projet.team.owner.id === currentUserId;
-        const isTeamMember = projet.team.members.some(member => member.id === currentUserId);
+        // Ensure we have the team owner loaded
+        if (!projet.team || !projet.team.owner) {
+            throw new NotFoundException(`Team or team owner not found for project ${taskDto.projetId}`);
+        }
 
-        if (!isTeamOwner && !isTeamMember) {
-            throw new UnauthorizedException('Only team owner or team members can create tasks');
+        // Check if the current user is the team owner
+        const isTeamOwner = projet.team.owner.id === currentUserId;
+
+        if (!isTeamOwner) {
+            throw new UnauthorizedException('Only team owner can create tasks');
         }
 
         const taskMapper = new TaskMapper();
@@ -56,10 +60,10 @@ export class TasksService {
     }
 
     async assignTaskToMember(taskId: number, memberId: number, currentUserId: number): Promise<TaskDto> {
-        // Find task with project, team, and owner information
+        // Find task with project and team information
         const task = await this.tasksRepository.findOne({
             where: { id: taskId },
-            relations: ['projet', 'projet.team', 'projet.team.owner', 'projet.team.members']
+            relations: ['projet', 'projet.team', 'projet.team.owner']
         });
 
         if (!task) {
@@ -72,17 +76,14 @@ export class TasksService {
         }
 
         // Find the member
-        const member = await this.usersRepository.findOne({
-            where: { id: memberId }
-        });
+        const member = await this.usersRepository
+            .createQueryBuilder('user')
+            .innerJoin('user.teams', 'team')
+            .where('user.id = :userId', { userId: memberId })
+            .andWhere('team.id = :teamId', { teamId: task.projet.team.id })
+            .getOne();
 
         if (!member) {
-            throw new NotFoundException(`User with ID ${memberId} not found`);
-        }
-
-        // Verify if the member belongs to the team
-        const isMemberOfTeam = task.projet.team.members.some(m => m.id === memberId);
-        if (!isMemberOfTeam) {
             throw new UnauthorizedException('Can only assign tasks to team members');
         }
 

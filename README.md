@@ -1,6 +1,255 @@
 <<<<<<< HEAD
 # Back_Tasky
 =======
+
+# Tasky API Documentation
+
+## Authentication
+
+### Register
+```http
+POST /auth/register
+```
+**Body:**
+```json
+{
+  "email": "string",
+  "password": "string",
+  "username": "string",
+  "nom": "string",
+  "prenom": "string"
+}
+```
+
+### Login
+```http
+POST /auth/login
+```
+**Body:**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+**Response:**
+```json
+{
+  "id": "number",
+  "email": "string",
+  "username": "string",
+  "nom": "string",
+  "prenom": "string",
+  "access_token": "string",
+  "refresh_token": "string"
+}
+```
+
+## Teams
+
+### Create Team
+```http
+POST /teams
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+**Body:**
+```json
+{
+  "nom": "string",
+  "description": "string",
+  "memberIds": [number]
+}
+```
+
+### Add Member to Team
+```http
+POST /teams/{teamId}/members/{userId}
+PUT /teams/{teamId}/members/{userId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+### Remove Member from Team
+```http
+DELETE /teams/{teamId}/members/{userId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+### Get Team Members
+```http
+GET /teams/{teamId}/members
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+## Projects
+
+### Create Project
+```http
+POST /projets
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+**Body:**
+```json
+{
+  "nom": "string",
+  "description": "string",
+  "startDate": "string (ISO date)",
+  "endDate": "string (ISO date)",
+  "status": "planifié | en cours | suspendu | terminé | annulé",
+  "idTeam": number
+}
+```
+
+### Get Projects by Team
+```http
+GET /projets/team/{teamId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+### Get Projects by Member
+```http
+GET /projets/member/{memberId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+## Tasks
+
+### Create Task
+```http
+POST /tasks
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+**Body:**
+```json
+{
+  "nom": "string",
+  "description": "string",
+  "startDate": "string (ISO date)",
+  "endDate": "string (ISO date)",
+  "priority": "critique | haute | normale | basse",
+  "statut": "a faire | en cours | terminee | annulee",
+  "projetId": number,
+  "location": {
+    "latitude": number,
+    "longitude": number,
+    "address": "string"
+  }
+}
+```
+
+### Assign Task to Member
+```http
+PUT /tasks/{taskId}/assign/{memberId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+### Get Tasks by Project
+```http
+GET /tasks/project/{projectId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+### Get Task by ID
+```http
+GET /tasks/{taskId}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+## Users
+
+### Search Users
+```http
+GET /users/search?query={searchTerm}
+```
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+## Error Responses
+
+All endpoints may return these error responses:
+
+### 401 Unauthorized
+```json
+{
+  "message": "Unauthorized",
+  "statusCode": 401
+}
+```
+
+### 404 Not Found
+```json
+{
+  "message": "Resource not found",
+  "statusCode": 404
+}
+```
+
+### 400 Bad Request
+```json
+{
+  "message": "Validation failed",
+  "statusCode": 400,
+  "errors": []
+}
+```
+
+## Setup and Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Run in development mode
+npm run start:dev
+
+# Run in production mode
+npm run start:prod
+```
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+JWT_ACCESS_SECRET_KEY=your_jwt_secret
+JWT_REFRESH_SECRET_KEY=your_refresh_secret
+DATABASE_URL=your_database_url
+```
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>

@@ -29,6 +29,7 @@ export class TeamController {
   }
 
   @Post(':teamId/members/:userId')
+  @Put(':teamId/members/:userId')
   addMember(
     @Request() req,
     @Param('teamId') teamId: string,
