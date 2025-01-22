@@ -14,6 +14,7 @@ import { ProjetsModule } from './projets/projets.module';
 import { ProjetsController } from './projets/projets.controller';
 import { ProjetsService } from './projets/projets.service';
 import { TasksModule } from './tasks/tasks.module';
+import { AidesModule } from './aides/aides.module';
 // @ts-ignore
 //import { FirebaseModule } from './firebase/firebase.module';
 //import { NotificationModule } from './notification/notification.module';
@@ -45,6 +46,7 @@ import { TasksModule } from './tasks/tasks.module';
     LocationsModule,
     TeamModule,
     TasksModule,
+    AidesModule,
     //FirebaseModule,
     //NotificationModule,
   ],

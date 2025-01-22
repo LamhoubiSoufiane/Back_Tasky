@@ -6,12 +6,16 @@ import { Task } from './bo/task';
 import { Location } from '../locations/location/location';
 import { User } from '../users/user/user';
 import { LocationsService } from '../locations/locations.service';
+import { Projet } from '../projets/projet/projet';
+import { ProjetsModule } from '../projets/projets.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Task, Location, User])],
+  imports: [
+    TypeOrmModule.forFeature([Task, Location, User, Projet]),
+    ProjetsModule
+  ],
   controllers: [TasksController],
   providers: [TasksService, LocationsService],
-  exports: [TasksService],
+  exports: [TasksService, TypeOrmModule]
 })
 export class TasksModule {}
-

@@ -3,11 +3,14 @@ import { TasksPriority } from '../Enum/tasksPriority.enum';
 import { LocationDto } from '../../locations/dto/locationDto';
 
 export class TaskDto {
-  public nom: string;
-  public description: string;
-  public startDate: Date;
-  public endDate: Date;
-  public statut: TasksStatut;
-  public priority: TasksPriority;
-  public location: LocationDto;
+    id?: number;
+    nom: string;
+    description: string;
+    startDate: Date;
+    endDate: Date;
+    priority: TasksPriority;
+    statut: TasksStatut;
+    memberId?: number;
+    location?: LocationDto;
+    projetId: number;
 }

@@ -3,13 +3,16 @@ import { ProjetsService } from './projets.service';
 import { ProjetsController } from './projets.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Projet } from './projet/projet';
-
+import { User } from '../users/user/user';
+import { Team } from '../teams/team/team.entity';
+import { ProjetMapper } from './Mapper/projetMapper.mapper';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Projet])],  // Ceci est crucial pour que le repository soit disponible
-  providers: [ProjetsService],
+  imports: [
+    TypeOrmModule.forFeature([Projet, User, Team])
+  ],
+  providers: [ProjetsService, ProjetMapper],
   controllers: [ProjetsController],
-  //exports: [ProjetsService]
- 
+  exports: [ProjetsService, TypeOrmModule]
 })
 export class ProjetsModule {}

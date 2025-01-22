@@ -1,39 +1,34 @@
-import { Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards, Request } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Body } from '@nestjs/common';
 import { TaskDto } from './dto/taskDto';
-import { Task } from './bo/task';
-import { LocationsService } from '../locations/locations.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tasks')
+@UseGuards(JwtAuthGuard)
 export class TasksController {
-  constructor(
-    private taskService: TasksService,
-
-  ) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   @Post()
-  async createTask(@Body() taskDto: TaskDto){
-    return this.taskService.createTask(taskDto);
+  async createTask(@Body() taskDto: TaskDto, @Request() req): Promise<TaskDto> {
+    return this.tasksService.createTask(taskDto, req.user.id);
   }
 
-  @Put(':taskId/assign/:userId')
-  async assignTaskToUser(@Param('taskId') taskId: number, @Param('userId') userId: number ){
-    return this.taskService.assignTaskToUser(taskId,userId);
+  @Put(':taskId/assign/:memberId')
+  async assignTaskToMember(
+    @Param('taskId') taskId: number,
+    @Param('memberId') memberId: number,
+    @Request() req
+  ): Promise<TaskDto> {
+    return this.tasksService.assignTaskToMember(taskId, memberId, req.user.id);
   }
-  /*@Put(':taskIk/updateTask')
-  async updateTask(@Body() taskDto: TaskDto)*/
 
-  @Get()
-  async getAllTasks(){
-    return this.taskService.getAllTasks();
+  @Get('project/:projectId')
+  async getTasksByProject(@Param('projectId') projectId: number, @Request() req): Promise<TaskDto[]> {
+    return this.tasksService.getTasksByProject(projectId, req.user.id);
   }
-  @Get('user/:userId')
-  async getTasksByUserId(@Param('userId') userId: number): Promise<Task[]>{
-    return this.taskService.getTasksByUserId(userId);
-  }
-  @Get('task/:taskId')
-  async getTaskById(@Param('taskId') taskId: number): Promise<TaskDto>{
-    return this.taskService.getTaskById(taskId);
+
+  @Get(':taskId')
+  async getTaskById(@Param('taskId') taskId: number, @Request() req): Promise<TaskDto> {
+    return this.tasksService.getTaskById(taskId, req.user.id);
   }
 }

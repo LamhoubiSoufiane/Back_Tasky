@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, ManyToMany, OneToMany } from 'typeorm';
 import { Team } from '../../teams/team/team.entity';
 import { Task } from '../../tasks/bo/task';
+import { Aide } from '../../aides/aide/aide.entity';
 
 @Entity()
 export class User {
@@ -38,6 +39,13 @@ export class User {
 
   @ManyToMany(() => Team, (team) => team.members)
   teams: Team[];
+
   @OneToMany(() => Task, (task) => task.member)
   tasks: Task[];
+
+  @OneToMany(() => Aide, aide => aide.demandeur)
+  aidesRecues: Aide[];
+
+  @OneToMany(() => Aide, aide => aide.aidant)
+  aidesProposees: Aide[];
 }

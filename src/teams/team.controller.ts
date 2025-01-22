@@ -38,8 +38,8 @@ export class TeamController {
   }
 
   @Get()
-  findAll(): Promise<Team[]> {
-    return this.teamService.findAll();
+  findAll(@Request() req): Promise<Team[]> {
+    return this.teamService.findTeamsByUserId(req.user.userId);
   }
 
   @Get(':id')
