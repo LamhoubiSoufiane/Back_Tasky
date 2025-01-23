@@ -10,37 +10,47 @@ export class ProjetsController {
   constructor(private readonly projetsService: ProjetsService) {}
 
   @Post()
-  async create(@Body() projetDTO: ProjetDTO): Promise<ProjetDTO> {
-    return this.projetsService.create(projetDTO);
+  async create(@Request() req,@Body() projetDTO: ProjetDTO): Promise<ProjetDTO> {
+    return this.projetsService.create(projetDTO, req.user.userId);
   }
 
   @Get()
-  async findAll(): Promise<ProjetDTO[]>{
-    return this.projetsService.findAll();
+  async findAll(@Request() req): Promise<ProjetDTO[]> {
+    return this.projetsService.findAll(req.user.userId);
   }
 
   @Get('member/:memberId')
-  async findProjectsByMember(@Param('memberId') memberId: number): Promise<ProjetDTO[]> {
-    return this.projetsService.findProjectsByMemberId(memberId);
+  async findProjectsByMemberId(
+    @Param('memberId') memberId: string,
+    @Request() req
+  ): Promise<ProjetDTO[]> {
+    return this.projetsService.findProjectsByMemberId(+memberId, req.user.userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<ProjetDTO> {
-    return this.projetsService.findById(id);
+  async findOne(@Param('id') id: string, @Request() req): Promise<ProjetDTO> {
+    return this.projetsService.findById(+id, req.user.userId);
   }
 
   @Get('team/:teamId')
-  async findByTeamId(@Param('teamId') teamId: number): Promise<ProjetDTO[]>{
-    return this.projetsService.getProjetsByTeamId(teamId);
+  async getProjetsByTeamId(
+    @Param('teamId') teamId: string,
+    @Request() req
+  ): Promise<ProjetDTO[]> {
+    return this.projetsService.getProjetsByTeamId(+teamId, req.user.userId);
   }
 
   @Put(':id')
-  async update(@Param('id') id: number, @Body() projetDTO: ProjetDTO): Promise<ProjetDTO> {
-    return this.projetsService.update(id, projetDTO);
+  async update(
+    @Param('id') id: string,
+    @Body() projetDTO: ProjetDTO,
+    @Request() req
+  ): Promise<ProjetDTO> {
+    return this.projetsService.update(+id, projetDTO, req.user.userId);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
-    return this.projetsService.remove(id);
+  async remove(@Param('id') id: string, @Request() req): Promise<void> {
+    return this.projetsService.remove(+id, req.user.userId);
   }
 }

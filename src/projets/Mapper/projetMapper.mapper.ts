@@ -23,10 +23,10 @@ export class ProjetMapper {
     dto.id = bo.id;
     dto.nom = bo.nom;
     dto.description = bo.description;
-    dto.startDate = bo.startDate.toISOString();
-    dto.endDate = bo.endDate.toISOString();
+    dto.startDate = bo.startDate?.toISOString();
+    dto.endDate = bo.endDate?.toISOString();
     dto.status = bo.status;
-    dto.idTeam = bo.team.id;
+    dto.idTeam = bo.team?.id;
     return dto;
   }
 }

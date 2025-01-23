@@ -18,6 +18,18 @@ export class AidesService {
     ) {}
 
     async createAide(aideDto: AideDTO, currentUserId: number): Promise<Aide> {
+        const userTask = await this.taskRepository.findOne({
+            where: { 
+                id: aideDto.taskId,
+                member: { id: currentUserId } 
+            }
+        });
+    
+        if (!userTask) {
+            throw new UnauthorizedException(
+                'You can only request help for tasks assigned to you'
+            );
+        }
         const task = await this.taskRepository.findOne({
             where: { id: aideDto.taskId },
             relations: ['member', 'projet', 'projet.team', 'projet.team.members']
@@ -27,9 +39,15 @@ export class AidesService {
             throw new NotFoundException(`Task with ID ${aideDto.taskId} not found`);
         }
 
+        if (!task.member) {
+            throw new BadRequestException(`Task with ID ${aideDto.taskId} is not assigned to any member yet`);
+        }
+
         // Verify if current user is assigned to the task
-        if (task.member?.id !== currentUserId) {
-            throw new UnauthorizedException('Only the assigned member can request help for this task');
+        if (task.member.id !== currentUserId) {
+            throw new UnauthorizedException(
+                `You cannot request help for this task. Only the assigned member (ID: ${task.member.id}) can request help.`
+            );
         }
 
         const aide = this.aideRepository.create({
@@ -118,5 +136,24 @@ export class AidesService {
             },
             relations: ['demandeur', 'task', 'task.projet']
         });
+    }
+
+    async getAideById(aideId: number, currentUserId: number): Promise<Aide> {
+        const aide = await this.aideRepository.findOne({
+            where: { id: aideId },
+            relations: ['demandeur', 'aidant', 'task', 'task.projet', 'task.projet.team', 'task.projet.team.members']
+        });
+
+        if (!aide) {
+            throw new NotFoundException(`Aide with ID ${aideId} not found`);
+        }
+
+        // Check if the current user is a member of the team that owns the project
+        const isTeamMember = aide.task.projet.team.members.some(member => member.id === currentUserId);
+        if (!isTeamMember) {
+            throw new UnauthorizedException('Access denied. You must be a team member to view this aide');
+        }
+
+        return aide;
     }
 }

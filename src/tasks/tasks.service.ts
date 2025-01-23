@@ -8,6 +8,7 @@ import { User } from '../users/user/user';
 import { LocationsService } from '../locations/locations.service';
 import { Location } from '../locations/location/location';
 import { Projet } from '../projets/projet/projet';
+import { TasksStatut } from './Enum/tasksStatut.enum';
 
 @Injectable()
 export class TasksService {
@@ -136,11 +137,9 @@ export class TasksService {
             throw new NotFoundException(`Project with ID ${projectId} not found`);
         }
 
-        // Check if user is either the owner or a member of the team
-        const isOwner = projet.team.owner.id === currentUserId;
+        // Check if user is a member of the team
         const isMember = projet.team.members.some(member => member.id === currentUserId);
-
-        if (!isOwner && !isMember) {
+        if (!isMember) {
             throw new UnauthorizedException('Access denied to project tasks');
         }
 
@@ -159,5 +158,40 @@ export class TasksService {
         });
 
         return tasks.map(task => new TaskMapper().toDTO(task));
+    }
+
+    async getMyTasksByStatus(userId: number, status: TasksStatut) {
+        return await this.tasksRepository
+          .createQueryBuilder('task')
+          .leftJoinAndSelect('task.projet', 'projet')
+          .leftJoinAndSelect('projet.team', 'team')
+          .leftJoinAndSelect('team.members', 'members')
+          .leftJoinAndSelect('task.member', 'member')
+          .where('member.id = :userId', { userId })
+          .andWhere('task.statut = :status', { status })
+          .getMany();
+    }
+
+    async getMyTasksByProject(userId: number, projectId: number) {
+        const project = await this.projetRepository.findOne({
+            where: { id: projectId },
+            relations: ['team', 'team.owner', 'team.members']
+        });
+        if (!project) {
+          throw new NotFoundException(`Project with ID ${projectId} not found`);
+        }
+
+        // Check if user is a member of the project's team
+        const isMember = project.team.members.some(member => member.id === userId);
+        if (!isMember) {
+          throw new UnauthorizedException('You are not a member of this project\'s team');
+        }
+
+        return await this.tasksRepository
+          .createQueryBuilder('task')
+          .leftJoinAndSelect('task.projet', 'projet')
+          .where('task.member.id = :userId', { userId })
+          .andWhere('projet.id = :projectId', { projectId })
+          .getMany();
     }
 }

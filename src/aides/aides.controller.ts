@@ -43,4 +43,10 @@ export class AidesController {
     async getAidesEnAttente(@Param('projectId') projectId: number): Promise<Aide[]> {
         return this.aidesService.getAidesEnAttente(projectId);
     }
+
+    @Get(':id')
+    @UseGuards(JwtAuthGuard)
+    async getAideById(@Param('id') id: number, @Request() req): Promise<Aide> {
+        return this.aidesService.getAideById(id, req.user.userId);
+    }
 }

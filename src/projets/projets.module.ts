@@ -6,10 +6,12 @@ import { Projet } from './projet/projet';
 import { User } from '../users/user/user';
 import { Team } from '../teams/team/team.entity';
 import { ProjetMapper } from './Mapper/projetMapper.mapper';
+import { Task } from '../tasks/bo/task';
+import { Aide } from '../aides/aide/aide.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Projet, User, Team])
+    TypeOrmModule.forFeature([Projet, User, Team, Task, Aide])
   ],
   providers: [ProjetsService, ProjetMapper],
   controllers: [ProjetsController],
