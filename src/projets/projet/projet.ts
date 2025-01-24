@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Team } from '../../teams/team/team.entity';
-import { User } from '../../users/user/user';
 import { ProjetStatus } from './ProjetStatus';
+import { Task } from '../../tasks/bo/task';
 
 @Entity()
 export class Projet {
@@ -11,25 +11,25 @@ export class Projet {
     @Column()
     nom: string;
 
-    @Column({ nullable: true })
+    @Column()
     description: string;
 
     @Column()
-    createdById: number;
+    startDate: Date;
 
-    @ManyToOne(() => User)
-    createdBy: User;
-
-    @Column({ nullable: true })
-    teamId: number;
-
-    @ManyToOne(() => Team, (team) => team.projets, { nullable: true })
-    team: Team;
+    @Column()
+    endDate: Date;
 
     @Column({
         type: 'enum',
         enum: ProjetStatus,
-        default: ProjetStatus.EN_COURS
+        default: ProjetStatus.Planifie
     })
     status: ProjetStatus;
+
+    @ManyToOne(() => Team, team => team.projets, { nullable: false })
+    team: Team;
+
+    @OneToMany(() => Task, task => task.projet)
+    tasks: Task[];
 }

@@ -18,6 +18,12 @@ export class Team {
   @Column()
   nom: string;
 
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ nullable: true })
+  photoTeam: string;
+
   @ManyToOne(() => User, { nullable: false })
   owner: User;
 
@@ -35,6 +41,6 @@ export class Team {
   })
   members: User[];
 
-  @OneToMany(() => Projet, (projet) => projet.team)
+  @OneToMany(() => Projet, projet => projet.team)
   projets: Projet[];
 }

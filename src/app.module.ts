@@ -13,10 +13,17 @@ import { Team } from './teams/team/team.entity';
 import { ProjetsModule } from './projets/projets.module';
 import { ProjetsController } from './projets/projets.controller';
 import { ProjetsService } from './projets/projets.service';
+import { TasksModule } from './tasks/tasks.module';
+import { AidesModule } from './aides/aides.module';
+// @ts-ignore
+//import { FirebaseModule } from './firebase/firebase.module';
+//import { NotificationModule } from './notification/notification.module';
+//import firebaseAdminConfig from './Config/firebase-admin.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      //load: [firebaseAdminConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
@@ -38,6 +45,10 @@ import { ProjetsService } from './projets/projets.service';
     ProjetsModule,
     LocationsModule,
     TeamModule,
+    TasksModule,
+    AidesModule,
+    //FirebaseModule,
+    //NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

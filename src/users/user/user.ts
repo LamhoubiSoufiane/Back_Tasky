@@ -1,5 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToMany, OneToMany, ManyToOne  } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToMany, OneToMany } from 'typeorm';
 import { Team } from '../../teams/team/team.entity';
+import { Task } from '../../tasks/bo/task';
+import { Aide } from '../../aides/aide/aide.entity';
 
 @Entity()
 export class User {
@@ -32,14 +34,18 @@ export class User {
 
   @Column({ nullable: true })
   refreshToken: string | null;
+  /*@Column()
+  fcmToken: string | null;*/
 
   @ManyToMany(() => Team, (team) => team.members)
   teams: Team[];
 
+  @OneToMany(() => Task, (task) => task.member)
+  tasks: Task[];
 
-  @ManyToOne(() => User, (user) => user.subordinates, { nullable: true })
-  chef: User | null;
+  @OneToMany(() => Aide, aide => aide.demandeur)
+  aidesRecues: Aide[];
 
-  @OneToMany(() => User, (user) => user.chef)
-  subordinates: User[];
+  @OneToMany(() => Aide, aide => aide.aidant)
+  aidesProposees: Aide[];
 }

@@ -1,158 +1,184 @@
-import { Injectable, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Projet } from './projet/projet';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ProjetDTO } from './projetDto/projetDTO';
-import { TeamService } from '../teams/team.service';
-import { UsersService } from '../users/users.service';
-import { ProjetStatus } from './projet/ProjetStatus';
+import { ProjetMapper } from './mapper/projetMapper.mapper';
+import { Team } from '../teams/team/team.entity';
+import { Task } from '../tasks/bo/task';
+import { Aide } from '../aides/aide/aide.entity';
 
 @Injectable()
 export class ProjetsService {
-    constructor(
-        @InjectRepository(Projet) 
-        private readonly projetRepository: Repository<Projet>,
-        private readonly teamService: TeamService,
-        private readonly usersService: UsersService,
-    ){}
+  constructor(
+    @InjectRepository(Projet)
+    private readonly projetRepository: Repository<Projet>,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Aide)
+    private readonly aideRepository: Repository<Aide>
+  ) {}
 
-    async create(projetDto: ProjetDTO, currentUserId: number): Promise<Projet>{
-        // Vérifier si l'utilisateur existe
-        const user = await this.usersService.findById(currentUserId);
-        if (!user) {
-            throw new NotFoundException(`Utilisateur avec l'id ${currentUserId} non trouvé`);
-        }
+  async create(projetDTO: ProjetDTO, userId: number): Promise<ProjetDTO> {
+    if (projetDTO.idTeam) {
+      const isTeamMember = await this.isUserTeamMember(userId, projetDTO.idTeam);
+      if (!isTeamMember) {
+        throw new UnauthorizedException('User is not a member of the specified team');
+      }
+    }
+    const projetMapper = new ProjetMapper();
+    const projet = projetMapper.toBO(projetDTO);
+    const savedProjet = await this.projetRepository.save(projet);
+    return projetMapper.toDTO(savedProjet);
+  }
 
-        // Vérifier si l'équipe existe
-        if (!projetDto.teamId) {
-            throw new BadRequestException("L'ID de l'équipe est requis");
-        }
+  private async isUserTeamMember(userId: number, teamId: number): Promise<boolean> {
+    const team = await this.teamRepository.findOne({
+      where: [
+        { id: teamId, owner: { id: userId } },
+        { id: teamId, members: { id: userId } }
+      ],
+      relations: ['owner', 'members']
+    });
+    return !!team;
+  }
 
-        const team = await this.teamService.findOne(projetDto.teamId);
-        
-        // Vérifier si l'utilisateur est le owner de l'équipe
-        if (team.owner.id !== currentUserId) {
-            throw new UnauthorizedException("Vous ne pouvez créer des projets que pour les équipes dont vous êtes le propriétaire");
-        }
+  private async isUserTeamOwner(userId: number, teamId: number): Promise<boolean> {
+    const team = await this.teamRepository.findOne({
+      where: { 
+        id: teamId,
+        owner: { id: userId }
+      },
+      relations: ['owner']
+    });
+    return !!team;
+  }
 
-        // Créer le projet
-        const projet = this.projetRepository.create({
-            nom: projetDto.nom,
-            description: projetDto.description,
-            createdById: currentUserId,
-            createdBy: user,
-            teamId: projetDto.teamId,
-            team: team,
-            status: projetDto.status || ProjetStatus.EN_COURS
-        });
+  async findAll(currentUserId: number): Promise<ProjetDTO[]> {
+    // Find all teams where the user is a member or owner
+    const teams = await this.teamRepository.find({
+      where: [
+        { owner: { id: currentUserId } },
+        { members: { id: currentUserId } }
+      ],
+      relations: ['projets', 'owner', 'members']
+    });
 
-        return await this.projetRepository.save(projet);
+    // Get all projects from these teams
+    const projects = teams.flatMap(team => team.projets || []);
+    return projects.map(projet => new ProjetMapper().toDTO(projet));
+  }
+
+  async findById(id: number, currentUserId: number): Promise<ProjetDTO> {
+    const projet = await this.projetRepository.findOne({
+      where: { id },
+      relations: ['team', 'team.owner', 'team.members']
+    });
+
+    if (!projet) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    async update(id: number, projetDto: ProjetDTO, currentUserId: number): Promise<Projet>{
-        const projet = await this.findById(id);
-        
-        // Verify project access
-        await this.verifyProjectAccess(projet, currentUserId);
-
-        const updatedProjet = await this.projetRepository.preload({
-            id,
-            ...projetDto,
-        });
-        
-        if(!updatedProjet){
-            throw new NotFoundException(`Projet avec l'id ${id} non trouvé`);
-        }
-        return await this.projetRepository.save(updatedProjet);
+    const isAuthorized = await this.isUserTeamMember(currentUserId, projet.team.id);
+    if (!isAuthorized) {
+      throw new UnauthorizedException('You do not have access to this project');
     }
 
-    async remove(id: number, currentUserId: number): Promise<void>{
-        const projet = await this.findById(id);
-        
-        // Verify project access
-        await this.verifyProjectAccess(projet, currentUserId);
+    return new ProjetMapper().toDTO(projet);
+  }
 
-        const result = await this.projetRepository.delete(id);
+  async findProjectsByMemberId(memberId: number, currentUserId: number): Promise<ProjetDTO[]> {
+    // Find all teams where the target user is a member
+    const teams = await this.teamRepository.find({
+      where: [
+        { owner: { id: memberId } },
+        { members: { id: memberId } }
+      ],
+      relations: ['projets', 'owner', 'members']
+    });
 
-        if(result.affected === 0){
-            throw new NotFoundException(`Projet avec l'id ${id} non trouvé`);
-        }
+    // Verify if current user has access to these teams
+    const accessibleTeams = await Promise.all(
+      teams.map(async team => {
+        const hasAccess = await this.isUserTeamMember(currentUserId, team.id);
+        return hasAccess ? team : null;
+      })
+    );
+
+    // Get projects only from teams where current user has access
+    const projects = accessibleTeams
+      .filter(team => team !== null)
+      .flatMap(team => team.projets || []);
+
+    return projects.map(projet => new ProjetMapper().toDTO(projet));
+  }
+
+  async getProjetsByTeamId(teamId: number, currentUserId: number): Promise<ProjetDTO[]> {
+    const isAuthorized = await this.isUserTeamMember(currentUserId, teamId);
+    if (!isAuthorized) {
+      throw new UnauthorizedException('You do not have access to projects in this team');
     }
 
-    async findAll(currentUserId: number): Promise<Projet[] | { message: string }> {
-        // 1. Récupération des équipes
-        const userTeams = await this.teamService.findTeamsByUserId(currentUserId);
-        
-        // 2. Vérification si l'utilisateur a des équipes
-        if (!userTeams || userTeams.length === 0) {
-            return { message: "Vous n'avez pas de projet" };
-        }
+    const projets = await this.projetRepository.find({
+      where: { team: { id: teamId } },
+      relations: ['team', 'team.owner', 'tasks']
+    });
 
-        // 3. Récupération des IDs des équipes
-        const teamIds = userTeams.map(team => team.id);
+    return projets.map(projet => new ProjetMapper().toDTO(projet));
+  }
 
-        // 4. Requête pour récupérer les projets
-        const projets = await this.projetRepository
-            .createQueryBuilder('projet')
-            .leftJoinAndSelect('projet.team', 'team')
-            .leftJoinAndSelect('projet.createdBy', 'createdBy')
-            .leftJoinAndSelect('team.members', 'members')
-            .where('projet.teamId IN (:...teamIds)', { teamIds })
-            .orWhere('projet.createdById = :currentUserId', { currentUserId })
-            .getMany();
-
-        // 5. Vérification si des projets existent
-        if (!projets || projets.length === 0) {
-            return { message: "Vous n'avez pas de projet" };
-        }
-
-        return projets;
+  async update(id: number, projetDTO: ProjetDTO, currentUserId: number): Promise<ProjetDTO> {
+    const projet = await this.projetRepository.findOne({
+      where: { id },
+      relations: ['team', 'team.owner', 'tasks']
+    });
+    if (!projet) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    async findById(id: number, currentUserId?: number): Promise<Projet> {
-        // Récupérer le projet avec ses relations
-        const projet = await this.projetRepository.findOne({
-            where: { id },
-            relations: ['team', 'team.members', 'createdBy'],
-        });
-
-        if (!projet) {
-            throw new NotFoundException(`Projet avec l'id ${id} non trouvé`);
-        }
-
-        // Si un userId est fourni, vérifier l'accès
-        if (currentUserId) {
-            // Vérifier si l'utilisateur est le créateur
-            if (projet.createdById === currentUserId) {
-                return projet;
-            }
-
-            // Vérifier si l'utilisateur est membre de l'équipe
-            const isMember = projet.team.members.some(member => member.id === currentUserId);
-            if (!isMember) {
-                throw new UnauthorizedException("Vous n'avez pas accès à ce projet");
-            }
-        }
-
-        return projet;
+    const isAuthorized = await this.isUserTeamOwner(currentUserId, projet.team.id);
+    if (!isAuthorized) {
+      throw new UnauthorizedException('Only team owners can update projects');
     }
 
-    private async verifyProjectAccess(projet: Projet, userId: number): Promise<void> {
-        // Creator always has access
-        if (projet.createdById === userId) {
-            return;
-        }
+    const projetMapper = new ProjetMapper();
+    const updatedProjet = projetMapper.toBO(projetDTO);
+    updatedProjet.id = id;
 
-        // If project belongs to a team, check team membership
-        if (projet.teamId) {
-            const team = await this.teamService.findOne(projet.teamId);
-            const isMember = team.members.some(member => member.id === userId);
-            if (!isMember) {
-                throw new UnauthorizedException("Vous n'avez pas accès à ce projet");
-            }
-        } else {
-            // If project doesn't belong to a team and user is not creator
-            throw new UnauthorizedException("Vous n'avez pas accès à ce projet");
-        }
+    const savedProjet = await this.projetRepository.save(updatedProjet);
+    return projetMapper.toDTO(savedProjet);
+  }
+
+  async remove(id: number, currentUserId: number): Promise<void> {
+    const projet = await this.projetRepository.findOne({
+      where: { id },
+      relations: ['team', 'team.owner', 'tasks', 'tasks.aides']
+    });
+    
+    if (!projet) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
     }
+
+    const isAuthorized = await this.isUserTeamOwner(currentUserId, projet.team.id);
+    if (!isAuthorized) {
+      throw new UnauthorizedException('Only team owners can delete projects');
+    }
+
+    // Delete tasks and their aides
+    if (projet.tasks && projet.tasks.length > 0) {
+      for (const task of projet.tasks) {
+        // Delete aides first if they exist
+        if (task.aides && task.aides.length > 0) {
+          await this.aideRepository.remove(task.aides);
+        }
+        // Delete the task
+        await this.taskRepository.remove(task);
+      }
+    }
+
+    // Finally delete the project
+    await this.projetRepository.remove(projet);
+  }
 }
