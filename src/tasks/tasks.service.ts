@@ -194,4 +194,77 @@ export class TasksService {
           .andWhere('projet.id = :projectId', { projectId })
           .getMany();
     }
+
+    async deleteTask(taskId: number, currentUserId: number): Promise<void> {
+        const task = await this.tasksRepository.findOne({
+            where: { id: taskId },
+            relations: ['projet', 'projet.team', 'projet.team.owner']
+        });
+
+        if (!task) {
+            throw new NotFoundException(`Task with ID ${taskId} not found`);
+        }
+
+        if (!task.projet?.team?.owner) {
+            throw new NotFoundException('Team owner information not found');
+        }
+
+        if (task.projet.team.owner.id !== currentUserId) {
+            throw new UnauthorizedException('Only team owner can delete tasks');
+        }
+
+        await this.tasksRepository.remove(task);
+    }
+
+    async updateTask(taskId: number, taskDto: TaskDto, currentUserId: number): Promise<TaskDto> {
+        const task = await this.tasksRepository.findOne({
+            where: { id: taskId },
+            relations: ['projet', 'projet.team', 'projet.team.owner']
+        });
+
+        if (!task) {
+            throw new NotFoundException(`Task with ID ${taskId} not found`);
+        }
+
+        if (!task.projet?.team?.owner) {
+            throw new NotFoundException('Team owner information not found');
+        }
+
+        if (task.projet.team.owner.id !== currentUserId) {
+            throw new UnauthorizedException('Only team owner can update tasks');
+        }
+
+        const taskMapper = new TaskMapper();
+        const updatedTask = taskMapper.toBO(taskDto);
+        updatedTask.id = task.id;
+        updatedTask.projet = task.projet;
+
+        const savedTask = await this.tasksRepository.save(updatedTask);
+        return taskMapper.toDTO(savedTask);
+    }
+
+    async updateTaskStatus(taskId: number, status: TasksStatut, currentUserId: number): Promise<TaskDto> {
+        const task = await this.tasksRepository.findOne({
+            where: { id: taskId },
+            relations: ['member']
+        });
+
+        if (!task) {
+            throw new NotFoundException(`Task with ID ${taskId} not found`);
+        }
+
+        if (!task.member) {
+            throw new UnauthorizedException('This task is not assigned to any member');
+        }
+
+        if (task.member.id !== currentUserId) {
+            throw new UnauthorizedException('Only assigned member can update task status');
+        }
+
+        task.statut = status;
+        const savedTask = await this.tasksRepository.save(task);
+        
+        const taskMapper = new TaskMapper();
+        return taskMapper.toDTO(savedTask);
+    }
 }

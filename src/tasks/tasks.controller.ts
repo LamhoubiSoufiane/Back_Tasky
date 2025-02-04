@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards, Request, ParseIntPipe, Delete } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskDto } from './dto/taskDto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -56,5 +56,31 @@ export class TasksController {
   @Get('my-tasks/project/:projectId')
   async getMyTasksByProject(@Request() req, @Param('projectId', ParseIntPipe) projectId: number) {
     return this.tasksService.getMyTasksByProject(req.user.id, projectId);
+  }
+
+  @Delete(':taskId')
+  async deleteTask(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Request() req
+  ): Promise<void> {
+    return this.tasksService.deleteTask(taskId, req.user.userId);
+  }
+
+  @Put(':taskId')
+  async updateTask(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Body() taskDto: TaskDto,
+    @Request() req
+  ): Promise<TaskDto> {
+    return this.tasksService.updateTask(taskId, taskDto, req.user.userId);
+  }
+
+  @Put(':taskId/status')
+  async updateTaskStatus(
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Body('status') status: TasksStatut,
+    @Request() req
+  ): Promise<TaskDto> {
+    return this.tasksService.updateTaskStatus(taskId, status, req.user.userId);
   }
 }
