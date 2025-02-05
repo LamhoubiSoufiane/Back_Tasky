@@ -33,6 +33,11 @@ export class TasksController {
     return this.tasksService.getTasksByMember(req.user.userId);
   }
 
+  @Get('tasksByUserId/:userId')
+  async getTasksByUserId(@Param('userId') userId: number,@Request() req):Promise<TaskDto[]>{
+    return this.tasksService.getTasksByUserId(userId);
+  }
+
   @Get(':taskId')
   async getTaskById(@Param('taskId') taskId: number, @Request() req): Promise<TaskDto> {
     return this.tasksService.getTaskById(taskId, req.user.userId);

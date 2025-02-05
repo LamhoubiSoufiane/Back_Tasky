@@ -121,10 +121,14 @@ export class TasksService {
         return new TaskMapper().toDTO(task);
     }
 
-    async getTasksByUserId(userId: number): Promise<Task[]> {
+    async getTasksByUserId(userId: number): Promise<TaskDto[]> {
         const user = await this.usersRepository.findOne({ where: { id: userId } });
         if (!user) throw new NotFoundException('User not found!');
-        return this.tasksRepository.find({ where: { member: user } });
+        const tasks = await this.tasksRepository.find({
+            where: { member: user } ,
+            relations: ['location'],
+        });
+        return tasks.map(task => new TaskMapper().toDTO(task));
     }
 
     async getTasksByProject(projectId: number, currentUserId: number): Promise<TaskDto[]> {
