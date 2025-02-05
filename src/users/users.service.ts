@@ -89,4 +89,24 @@ export class UsersService {
       ])
       .getMany();
   }
+
+
+  async updateUser(id: number, userDto: UserDTO): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    console.log("----------------------------> Données reçues pour mise à jour :", userDto);
+    if(!user){
+      throw new Error('User not found');
+    }
+    
+    user.nom = userDto.nom;
+    user.prenom = userDto.prenom;
+    user.username = userDto.username;
+    user.email = userDto.email;
+    user.imageUrl = userDto.imageUrl;
+    
+    const updatedUser = await this.usersRepository.save(user);
+    
+    console.log("******************************** Utilisateur mis à jour :", updatedUser);
+    return updatedUser;
+ }
 }
