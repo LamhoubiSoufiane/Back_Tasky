@@ -18,6 +18,7 @@ import { AidesModule } from './aides/aides.module';
 // @ts-ignore
 //import { FirebaseModule } from './firebase/firebase.module';
 //import { NotificationModule } from './notification/notification.module';
+import { UploadModule } from './upload/upload.module';
 //import firebaseAdminConfig from './Config/firebase-admin.config';
 
 @Module({
@@ -47,8 +48,10 @@ import { AidesModule } from './aides/aides.module';
     TeamModule,
     TasksModule,
     AidesModule,
+    UploadModule,
     //FirebaseModule,
     //NotificationModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
