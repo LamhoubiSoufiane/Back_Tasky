@@ -1,0 +1,391 @@
+# Documentation API Tasky
+
+## Table des matières
+1. [Authentification](#authentification)
+2. [Utilisateurs](#utilisateurs)
+3. [Équipes](#équipes)
+4. [Localisation](#localisation)
+
+## Authentification
+
+### 1. Inscription (Register)
+- **URL**: `/auth/register`
+- **Méthode**: POST
+- **Corps de la requête**:
+  ```json
+  {
+    "email": "user@example.com",
+    "username": "username",
+    "password": "password123",
+    "nom": "Nom",
+    "prenom": "Prénom"
+  }
+  ```
+- **Réponses**:
+  - **201 Created**: Inscription réussie
+    ```json
+    {
+      "message": "Compte créé avec succès",
+      "user": {
+        "id": 1,
+        "email": "user@example.com",
+        "username": "username",
+        "nom": "Nom",
+        "prenom": "Prénom"
+      }
+    }
+    ```
+  - **409 Conflict**: Email ou username déjà utilisé
+    ```json
+    {
+      "message": "Cet email est déjà utilisé",
+      "error": "Conflict",
+      "statusCode": 409
+    }
+    ```
+  - **400 Bad Request**: Données invalides
+    ```json
+    {
+      "message": "Le mot de passe doit contenir au moins 6 caractères",
+      "error": "Bad Request",
+      "statusCode": 400
+    }
+    ```
+
+### 2. Connexion (Login)
+- **URL**: `/auth/login`
+- **Méthode**: POST
+- **Corps de la requête**:
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123"
+  }
+  ```
+- **Réponses**:
+  - **200 OK**: Connexion réussie
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1...",
+      "refresh_token": "eyJhbGciOiJIUzI1...",
+      "user": {
+        "id": 1,
+        "email": "user@example.com",
+        "username": "username",
+        "nom": "Nom",
+        "prenom": "Prénom"
+      }
+    }
+    ```
+  - **401 Unauthorized**: Identifiants incorrects
+    ```json
+    {
+      "message": "Email ou mot de passe incorrect",
+      "error": "Unauthorized",
+      "statusCode": 401
+    }
+    ```
+
+### 3. Déconnexion (Logout)
+- **URL**: `/auth/logout`
+- **Méthode**: POST
+- **Headers**:
+  ```
+  Authorization: Bearer <refresh_token>
+  ```
+- **Corps de la requête**:
+  ```json
+  {
+    "refreshToken": "votre_refresh_token"
+  }
+  ```
+- **Réponses**:
+  - **200 OK**: Déconnexion réussie
+    ```json
+    {
+      "message": "Déconnexion réussie"
+    }
+    ```
+  - **401 Unauthorized**: Token invalide
+    ```json
+    {
+      "message": "Token invalide ou expiré",
+      "error": "Unauthorized",
+      "statusCode": 401
+    }
+    ```
+
+### 4. Réinitialisation du mot de passe (Demande)
+- **URL**: `/auth/reset-password-request`
+- **Méthode**: POST
+- **Corps de la requête**:
+  ```json
+  {
+    "email": "user@example.com"
+  }
+  ```
+- **Réponses**:
+  - **200 OK**: Code envoyé
+    ```json
+    {
+      "message": "Un code de vérification est envoyé à l'adresse mail"
+    }
+    ```
+  - **404 Not Found**: Email non trouvé
+    ```json
+    {
+      "message": "Utilisateur non trouvé",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+    ```
+
+### 5. Vérification OTP
+- **URL**: `/auth/verify-otp`
+- **Méthode**: POST
+- **Corps de la requête**:
+  ```json
+  {
+    "email": "user@example.com",
+    "otp": "123456"
+  }
+  ```
+- **Réponses**:
+  - **200 OK**: Code valide
+    ```json
+    {
+      "message": "Code OTP valide"
+    }
+    ```
+  - **400 Bad Request**: Code invalide
+    ```json
+    {
+      "message": "Code OTP invalide",
+      "error": "Bad Request",
+      "statusCode": 400
+    }
+    ```
+
+### 6. Rafraîchissement du Token
+- **URL**: `/auth/refresh-token`
+- **Méthode**: POST
+- **Headers**:
+  ```
+  Authorization: Bearer <refresh_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Nouveaux tokens générés
+    ```json
+    {
+      "access_token": "nouveau_access_token",
+      "refresh_token": "nouveau_refresh_token"
+    }
+    ```
+  - **401 Unauthorized**: Token de rafraîchissement invalide
+    ```json
+    {
+      "message": "Token invalide ou expiré",
+      "error": "Unauthorized",
+      "statusCode": 401
+    }
+    ```
+
+## Utilisateurs
+
+### 1. Recherche d'utilisateurs
+- **URL**: `/users/search`
+- **Méthode**: GET
+- **Paramètres de requête**: `?q=terme_recherche`
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Liste des utilisateurs trouvés
+    ```json
+    [
+      {
+        "id": 1,
+        "username": "username",
+        "email": "user@example.com",
+        "nom": "Nom",
+        "prenom": "Prénom"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: Non authentifié
+    ```json
+    {
+      "message": "Non authentifié",
+      "error": "Unauthorized",
+      "statusCode": 401
+    }
+    ```
+
+## Équipes
+
+### 1. Création d'une équipe
+- **URL**: `/teams`
+- **Méthode**: POST
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Corps de la requête**:
+  ```json
+  {
+    "nom": "Mon équipe",
+    "memberIds": [1, 2, 3]
+  }
+  ```
+- **Réponses**:
+  - **201 Created**: Équipe créée
+    ```json
+    {
+      "id": 1,
+      "nom": "Mon équipe",
+      "owner": {
+        "id": 1,
+        "username": "username"
+      },
+      "members": [
+        {
+          "id": 1,
+          "username": "username"
+        }
+      ]
+    }
+    ```
+  - **401 Unauthorized**: Non authentifié
+  - **400 Bad Request**: Données invalides
+
+### 2. Ajout d'un membre
+- **URL**: `/teams/:teamId/members/:userId`
+- **Méthode**: POST
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **201 Created**: Membre ajouté
+  - **401 Unauthorized**: Non authentifié
+  - **403 Forbidden**: Non autorisé
+  - **404 Not Found**: Équipe ou utilisateur non trouvé
+
+### 3. Liste des équipes
+- **URL**: `/teams`
+- **Méthode**: GET
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Liste des équipes
+    ```json
+    [
+      {
+        "id": 1,
+        "nom": "Mon équipe",
+        "owner": {
+          "id": 1,
+          "username": "username"
+        },
+        "members": []
+      }
+    ]
+    ```
+  - **401 Unauthorized**: Non authentifié
+
+### 4. Détails d'une équipe
+- **URL**: `/teams/:id`
+- **Méthode**: GET
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Détails de l'équipe
+  - **401 Unauthorized**: Non authentifié
+  - **404 Not Found**: Équipe non trouvée
+
+### 5. Modification d'une équipe
+- **URL**: `/teams/:id`
+- **Méthode**: PUT
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Corps de la requête**:
+  ```json
+  {
+    "nom": "Nouveau nom",
+    "memberIds": [1, 2, 3]
+  }
+  ```
+- **Réponses**:
+  - **200 OK**: Équipe mise à jour
+  - **401 Unauthorized**: Non authentifié
+  - **403 Forbidden**: Non autorisé
+  - **404 Not Found**: Équipe non trouvée
+
+### 6. Suppression d'une équipe
+- **URL**: `/teams/:id`
+- **Méthode**: DELETE
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Équipe supprimée
+  - **401 Unauthorized**: Non authentifié
+  - **403 Forbidden**: Non autorisé
+  - **404 Not Found**: Équipe non trouvée
+
+### 7. Liste des membres d'une équipe
+- **URL**: `/teams/:id/members`
+- **Méthode**: GET
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Liste des membres
+    ```json
+    [
+      {
+        "id": 1,
+        "username": "username",
+        "email": "user@example.com",
+        "nom": "Nom",
+        "prenom": "Prénom"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: Non authentifié
+  - **404 Not Found**: Équipe non trouvée
+
+### 8. Équipes d'un utilisateur
+- **URL**: `/teams/user/:userId`
+- **Méthode**: GET
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Liste des équipes de l'utilisateur
+  - **401 Unauthorized**: Non authentifié
+  - **404 Not Found**: Utilisateur non trouvé
+
+### 9. Retrait d'un membre
+- **URL**: `/teams/:teamId/members/:userId`
+- **Méthode**: DELETE
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Réponses**:
+  - **200 OK**: Membre retiré
+  - **400 Bad Request**: Tentative de retirer le propriétaire
+  - **401 Unauthorized**: Non authentifié
+  - **403 Forbidden**: Non autorisé
+  - **404 Not Found**: Équipe ou membre non trouvé
