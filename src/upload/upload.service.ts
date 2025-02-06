@@ -48,48 +48,56 @@ export class UploadService {
 */
 
 constructor() {
-    // S'assurer que l'instance est correctement initialisée
+    // S'assurer que le dossier d'upload existe dès l'initialisation du service
     this.createUploadDir();
   }
 
   // Crée le répertoire d'upload si nécessaire
   createUploadDir() {
-    const uploadDir = path.join(__dirname, '..', 'uploads', 'images');
+    // Modification du chemin pour être sûr qu'il est créé à la racine du projet
+    const uploadDir = path.join(process.cwd(), 'uploads', 'images');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
   }
 
-// Configuration du stockage (utilisé par multer)
-getStorage() {
+  // Méthode statique pour fournir la configuration du stockage à Multer
+  static getStorage() {
     return diskStorage({
-      // Définir le répertoire de destination des fichiers uploadés
       destination: (req, file, cb) => {
-        this.createUploadDir(); // Crée le répertoire avant de sauvegarder
-        cb(null, path.join(__dirname, '..', 'uploads', 'images'));
+        // Utilisation du même chemin ici
+        const uploadDir = path.join(process.cwd(), 'uploads', 'images');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
       },
-      // Nom unique du fichier
       filename: (req, file, cb) => {
-        console.log("Fichier reçu : ", file);  // Vérifie le contenu du fichier
         const fileExtension = path.extname(file.originalname);
         if (!fileExtension) {
-          return cb(new Error('File extension not found'));  // Vérifie s'il y a une extension
+          return cb(new Error('File extension not found'), null);
         }
-        console.log("Extension du fichier : ", fileExtension);  // Vérifie l'extension récupérée
-        cb(null, Date.now() + fileExtension);  // Génère un nom unique avec l'extension
+        cb(null, `${Date.now()}${fileExtension}`);
       },
     });
   }
 
-  // Filtre les fichiers autorisés (ici uniquement les images)
-  getFileFilter() {
+  // Méthode statique pour fournir le filtre des fichiers à Multer
+  static getFileFilter() {
     return (req, file, cb) => {
       const mimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (mimeTypes.includes(file.mimetype)) {
-        cb(null, true); // Autorise les fichiers valides
+        cb(null, true);
       } else {
-        cb(new Error('Only image files are allowed!'), false); // Fichiers non valides rejetés
+        cb(new Error('Only image files are allowed!'), false);
       }
     };
   }
+
+  // Ajouter cette méthode pour vérifier si le fichier existe
+  async verifyFileExists(filename: string): Promise<boolean> {
+    const filePath = path.join(__dirname, '..', 'uploads', 'images', filename);
+    return fs.existsSync(filePath);
+  }
+
 }

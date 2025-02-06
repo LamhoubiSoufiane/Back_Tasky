@@ -26,25 +26,27 @@ export class UploadController {
     
 */
 
-constructor(private readonly uploadService: UploadService) {}
+    constructor(private readonly uploadService: UploadService) {}
 
-@Post()
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file) {
-    if (!file) {
-      throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+    @Post()
+    @UseInterceptors(FileInterceptor('file', {
+        storage: UploadService.getStorage(),
+        fileFilter: UploadService.getFileFilter(),
+    }))
+    async uploadFile(@UploadedFile() file: Express.Multer.File) {
+        if (!file) {
+            throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+        }
+
+        // Créer l'URL complète pour accéder à l'image
+        const imageUrl = `http://localhost:3000/uploads/images/${file.filename}`;
+        return { 
+            success: true, 
+            imageUrl,
+            filename: file.filename,
+            originalName: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size
+        };
     }
-
-    const storage = this.uploadService.getStorage();
-    const fileFilter = this.uploadService.getFileFilter();
-
-    // Vérifie si storage et fileFilter sont définis
-    if (!storage || !fileFilter) {
-      throw new HttpException('Invalid file configuration', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    const imageUrl = `http://localhost:3000/uploads/images/${file.filename}`;
-    return { success: true, imageUrl };
-  }
-
 }
