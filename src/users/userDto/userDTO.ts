@@ -5,4 +5,7 @@ export class UserDTO {
   readonly nom:string;
   readonly prenom:string;
   readonly username:string;
+  readonly chefId?: number; 
+  readonly subordinatesIds?: number[]; 
+   imageUrl: string | null;
 }

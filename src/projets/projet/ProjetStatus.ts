@@ -4,5 +4,5 @@ export enum ProjetStatus {
     Suspendu = 'suspendu',
     Termine = 'terminé',
     Annule = 'annulé',
-  }
+}
   
