@@ -8,6 +8,7 @@ import { User } from '../users/user/user';
 import { LocationsService } from '../locations/locations.service';
 import { Projet } from '../projets/projet/projet';
 import { ProjetsModule } from '../projets/projets.module';
+import { TasksGateway } from './tasks.gateway';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { ProjetsModule } from '../projets/projets.module';
     ProjetsModule
   ],
   controllers: [TasksController],
-  providers: [TasksService, LocationsService],
+  providers: [TasksService, LocationsService, TasksGateway],
   exports: [TasksService, TypeOrmModule]
 })
 export class TasksModule {}
