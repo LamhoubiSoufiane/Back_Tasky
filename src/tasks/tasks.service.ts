@@ -9,6 +9,7 @@ import { LocationsService } from '../locations/locations.service';
 import { Location } from '../locations/location/location';
 import { Projet } from '../projets/projet/projet';
 import { TasksStatut } from './Enum/tasksStatut.enum';
+import { TasksGateway } from './tasks.gateway';
 
 @Injectable()
 export class TasksService {
@@ -19,7 +20,8 @@ export class TasksService {
         private usersRepository: Repository<User>,
         @InjectRepository(Projet)
         private projetRepository: Repository<Projet>,
-        private locationService: LocationsService
+        private locationService: LocationsService,
+        private taskGateway: TasksGateway,
     ) {}
 
     async createTask(taskDto: TaskDto, currentUserId: number): Promise<TaskDto> {
@@ -57,6 +59,8 @@ export class TasksService {
         }
 
         const savedTask = await this.tasksRepository.save(task);
+        // Notifier via WebSocket
+        this.taskGateway.notifyTaskCreated(savedTask.projet.id, savedTask);
         return taskMapper.toDTO(savedTask);
     }
 
@@ -64,7 +68,7 @@ export class TasksService {
         // Find task with project and team information
         const task = await this.tasksRepository.findOne({
             where: { id: taskId },
-            relations: ['projet', 'projet.team', 'projet.team.owner']
+            relations: ['projet', 'projet.team', 'projet.team.owner', 'member']
         });
 
         if (!task) {
@@ -91,7 +95,8 @@ export class TasksService {
         // Assign the task
         task.member = member;
         const updatedTask = await this.tasksRepository.save(task);
-        
+        // Notifier via WebSocket
+        this.taskGateway.notifyTaskAssigned(updatedTask.projet.id, updatedTask, null);
         return new TaskMapper().toDTO(updatedTask);
     }
 
@@ -218,6 +223,8 @@ export class TasksService {
         }
 
         await this.tasksRepository.remove(task);
+        // Notifier via WebSocket
+        this.taskGateway.notifyTaskDeleted(task.projet.id, taskId,currentUserId);
     }
 
     async updateTask(taskId: number, taskDto: TaskDto, currentUserId: number): Promise<TaskDto> {
@@ -244,13 +251,15 @@ export class TasksService {
         updatedTask.projet = task.projet;
 
         const savedTask = await this.tasksRepository.save(updatedTask);
+        // Notifier via WebSocket
+        this.taskGateway.notifyTaskUpdated(savedTask.projet.id, savedTask);
         return taskMapper.toDTO(savedTask);
     }
 
     async updateTaskStatus(taskId: number, status: TasksStatut, currentUserId: number): Promise<TaskDto> {
         const task = await this.tasksRepository.findOne({
             where: { id: taskId },
-            relations: ['member']
+            relations: ['member', 'projet']
         });
 
         if (!task) {
@@ -269,6 +278,8 @@ export class TasksService {
         const savedTask = await this.tasksRepository.save(task);
         
         const taskMapper = new TaskMapper();
+        // Notifier via WebSocket
+        this.taskGateway.notifyTaskStatusUpdated(savedTask.projet.id, savedTask);
         return taskMapper.toDTO(savedTask);
     }
 }
